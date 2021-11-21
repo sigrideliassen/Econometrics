@@ -1,0 +1,54 @@
+### PART A ### 
+
+# Parameter inputs: 
+beta_0 = -1 
+beta_1 = 1 
+
+std_u = sqrt(1) 
+mean_u = 0
+std_x = sqrt(2)
+mean_x = 1
+k = 1 # Numbers of parameters estiamted 
+
+### Simulate the model when n = 20 ###
+n = 20 
+set.seed(517)
+reps = 10000 
+
+options(max.print = 50000)
+OLS = matrix(nrow = reps, ncol = 2)
+var = matrix(nrow = reps, ncol = 1)
+reject = matrix(nrow = reps, ncol = 1)
+
+# Begin Monte Carlo simulations: 
+for (r in 1:reps)
+{
+  x = rnorm(n, mean_x, std_x)
+  u = rnorm(n, mean_u, std_u)
+  y = beta_0 + (beta_1*x) + u 
+  
+  beta0_hat = -1 # Må vi estimere beta0 også? Finne formel for beta0 her. 
+  beta1_hat = solve( t(x) %*% x) %*% (t(x) %*% y)  
+  
+  sigma2 = (sum(u^2)/(n - k))
+  var_b_hat = sigma2*(solve((t(x) %*% x)))  
+  
+  # Store beta and var in the matrix each time we estimate them: 
+  OLS[r,1] = beta0_hat
+  OLS[r,2] = beta1_hat 
+  var[r,1] = var_b_hat
+  
+  # T-test: 
+  result = replicate(reps, t.test(y, alternative = "two.sided", mu = 1)$p.value)  
+  rej = ifelse(result < 0.05, 1, 0) 
+}
+
+# Properties of OLS model: 
+OLS = cbind(OLS)        # Ensures that it is a column vector 
+OLS_avg = mean(OLS[,2]) # Computes sample mean of values within OLS 
+OLS_sd = sd(OLS[,2])    # Computes sample std.dev of values within OLS 
+
+# Conducting empirical size: 
+# emp_size = (countif 0)/reps
+
+# rnorm(c(n, OLS_avg , OLS_sd))
